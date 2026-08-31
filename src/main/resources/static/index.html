@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CALCULO_FRETE - Mobile</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height:100vh; padding:20px; }
+        .container { max-width:400px; margin:0 auto; background:white; border-radius:20px; padding:25px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+        h1 { text-align:center; color:#667eea; margin-bottom:5px; font-size:24px; }
+        .subtitle { text-align:center; color:#888; font-size:13px; margin-bottom:20px; }
+        label { display:block; margin-top:15px; font-weight:600; color:#333; font-size:14px; }
+        input { width:100%; padding:14px; border:2px solid #e0e0e0; border-radius:12px; margin-top:6px; font-size:16px; outline:none; transition:0.3s; }
+        input:focus { border-color:#667eea; }
+        button { width:100%; padding:15px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; border-radius:12px; margin-top:20px; font-size:16px; font-weight:600; cursor:pointer; }
+        button:active { transform:scale(0.98); }
+        .resultado { margin-top:20px; padding:15px; background:#f0f4ff; border-radius:12px; display:none; }
+        .resultado.show { display:block; }
+        .resultado h3 { color:#667eea; margin-bottom:10px; }
+        .linha { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #e0e0e0; }
+        .linha:last-child { border:none; font-weight:bold; color:#667eea; font-size:18px; }
+        .historico { margin-top:20px; }
+        .historico h3 { font-size:14px; color:#333; margin-bottom:10px; }
+        .item { background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px; }
+        .badge { display:inline-block; background:#667eea; color:white; padding:2px 8px; border-radius:10px; font-size:11px; margin-left:5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚚 CALCULO_FRETE</h1>
+        <p class="subtitle">preco_final = preco_base + taxa_fixa (R$ 10)</p>
+        
+        <label>Nome do Cliente</label>
+        <input type="text" id="nome" placeholder="Ex: Joao" value="Joao">
+        
+        <label>Preco Base (R$)</label>
+        <input type="number" id="precoBase" placeholder="Ex: 100" value="100" inputmode="decimal">
+        
+        <button onclick="calcular()">Calcular Frete</button>
+        
+        <div id="resultado" class="resultado">
+            <h3>Resultado</h3>
+            <div class="linha"><span>ID:</span><span id="rId">-</span></div>
+            <div class="linha"><span>Cliente:</span><span id="rNome">-</span></div>
+            <div class="linha"><span>Preco Base:</span><span id="rBase">-</span></div>
+            <div class="linha"><span>Taxa Fixa:</span><span id="rTaxa">-</span></div>
+            <div class="linha"><span>Preco Final:</span><span id="rFinal">-</span></div>
+        </div>
+
+        <button onclick="listar()" style="background:#eee; color:#333; margin-top:10px;">Ver Histórico</button>
+        
+        <div id="historico" class="historico"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api/frete';
+        
+        async function calcular() {
+            const nome = document.getElementById('nome').value;
+            const precoBase = document.getElementById('precoBase').value;
+            
+            if(!nome || !precoBase) {
+                alert('Preencha nome e preco base!');
+                return;
+            }
+            
+            try {
+                const resp = await fetch(`${API_BASE}/calcular?nome=${encodeURIComponent(nome)}&precoBase=${precoBase}`);
+                const data = await resp.json();
+                
+                document.getElementById('rId').textContent = data.id;
+                document.getElementById('rNome').textContent = data.nomeCliente;
+                document.getElementById('rBase').textContent = 'R$ ' + data.precoBase.toFixed(2);
+                document.getElementById('rTaxa').textContent = 'R$ ' + data.taxaFixa.toFixed(2);
+                document.getElementById('rFinal').textContent = 'R$ ' + data.precoFinal.toFixed(2);
+                document.getElementById('resultado').classList.add('show');
+                
+                // vibra no celular se suportado
+                if(navigator.vibrate) navigator.vibrate(50);
+            } catch(e) {
+                alert('Erro: ' + e.message + '\nVerifique se a API está rodando!');
+            }
+        }
+        
+        async function listar() {
+            try {
+                const resp = await fetch(`${API_BASE}/listar`);
+                const data = await resp.json();
+                const div = document.getElementById('historico');
+                
+                if(data.length === 0) {
+                    div.innerHTML = '<h3>Histórico vazio</h3>';
+                    return;
+                }
+                
+                let html = `<h3>Histórico (${data.length})</h3>`;
+                data.slice(-10).reverse().forEach(p => {
+                    html += `<div class="item">${p.nomeCliente} - R$ ${p.precoBase} + R$ ${p.taxaFixa} = <b>R$ ${p.precoFinal}</b> <span class="badge">ID ${p.id}</span></div>`;
+                });
+                div.innerHTML = html;
+            } catch(e) {
+                alert('Erro ao listar: ' + e.message);
+            }
+        }
+        
+        // Enter para calcular
+        document.getElementById('precoBase').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') calcular();
+        });
+    </script>
+</body>
+</html>
