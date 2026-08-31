@@ -319,6 +319,10 @@ Desenvolvido a partir do algoritmo CALCULO_FRETE em Portugol.
 **GitHub:** coloque seu link aqui
 **LinkedIn:** coloque seu link aqui
 
+## 🌐 API no ar
+- App: https://calculo-frete-7.onrender.com
+- Swagger: https://calculo-frete-7.onrender.com/swagger-ui.html
+- API: https://calculo-frete-7.onrender.com/api/frete/calcular?nome=Joao&precoBase=100
 ---
 
 ### 🎓 Para Recrutadores
